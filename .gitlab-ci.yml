@@ -1,0 +1,44 @@
+stages:
+  - install
+  - tests
+  - quality
+
+variables:
+  JAKZAL_IMAGE: jakzal/phpqa:1.96.3-php8.2-alpine
+
+build-php:
+  tags:
+    - dind
+  stage: install
+  image: troopers/docker-images:docker-pip-docker-compose
+  services:
+    - $DOCKER_DIND_IMAGE
+  before_script:
+    - echo -e "\e[0Ksection_start:`date +%s`:docker-login[collapsed=true]\r\e[0Kdocker login"
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_TOKEN
+    - echo -e "\e[0Ksection_end:`date +%s`:docker-login\r\e[0K"
+  script:
+    - ./.gitlab/build-job-php
+  only:
+    - merge_requests
+
+tests:
+  stage: tests
+  image: ${CI_REGISTRY}/${CI_PROJECT_PATH}/php:latest
+  needs: [ 'build-php' ]
+  only:
+    - merge_requests
+  script:
+    - echo -e "\e[0Ksection_start:`date +%s`:tests\r\e[0Ktests"
+    - php -f ./src/script.php
+    - echo -e "\e[0Ksection_end:`date +%s`:0Ktests\r\e[0K"
+
+php-cs-fixer:
+  image: ${JAKZAL_IMAGE}
+  stage: quality
+  needs: [ ]
+  only:
+    - merge_requests
+  script:
+    - php-cs-fixer --dry-run --diff --no-interaction --ansi fix --show-progress none

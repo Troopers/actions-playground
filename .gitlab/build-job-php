@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+
+readonly IMAGE_URI=${CI_REGISTRY}/${CI_PROJECT_PATH}/php:latest
+
+set +e
+DOCKER_CLI_EXPERIMENTAL=enabled docker manifest inspect $IMAGE_URI > /dev/null
+if [ $? -eq 0 ]
+then
+    echo "${IMAGE_URI} already exists in the registry"
+    exit 0
+fi
+set -e
+
+docker build --quiet .gitlab/ --tag $IMAGE_URI
+docker push $IMAGE_URI
