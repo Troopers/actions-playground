@@ -1,0 +1,21 @@
+name: Tests
+
+on: [pull_request]
+
+jobs:
+  tests:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP, with extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: intl
+
+      - name: Run tests
+        run: php -f ./src/script.php

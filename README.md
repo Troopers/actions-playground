@@ -1,1 +1,1 @@
-# actions-playground
+# ci-playground
